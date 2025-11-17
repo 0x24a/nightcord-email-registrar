@@ -16,4 +16,4 @@ def load_config():
         secrets = json.load(f)
     with open("config.preserved_addresses.json", "r") as f:
         preserved_addresses = json.load(f)
-    return Config(**secrets, preserved_addresses=preserved_addresses)
+    return Config(**secrets, **preserved_addresses)
