@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en" class="mdui-theme-dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
+    <meta name="renderer" content="webkit"/>
+
+    <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+    <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+    <script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback"
+      defer
+    ></script>
+    <!-- if you are watching this, sorry... my frontend skill kinda sucks -->
+    <style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    </style>
+    <title>Nightcord Email</title>
+  </head>
+  <body>
+    <br><br><br>
+    <center>
+        <p style="font-size: xx-large; animation: fadeInUp 0.5s ease-out forwards; opacity: 0;">Nightcord Email</p>
+        <p style="max-width: 75%; animation: fadeInUp 0.5s ease-out forwards 0.5s; opacity: 0; color: rgb(var(--mdui-color-outline));">At 25 o'clock in the depths of night, gathered in the corners of the internet</p>
+        <br><br><br><br><br>
+        <mdui-button style="width: 30%; animation: fadeInUp 0.5s ease-out forwards 1s; opacity: 0;">Join waitlist</mdui-button>
+    </center>
+    <mdui-dialog id="apply-form">
+        
+    </mdui-dialog>
+    <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; animation: fadeIn 0.5s linear forwards 1.5s; opacity: 0;">
+        <mdui-divider></mdui-divider>
+        <br>
+        <p style="color: rgb(var(--mdui-color-outline)); max-width: 75%; padding-left: 12.5%;">Fan-made service. Not affiliated with SEGA / Colorful Palette / Crypton Future Media.</p>
+        <br>
+    </footer>
+    <script>
+      mdui.setColorScheme('#884499');
+      window.turnstileReady = false;
+      window.turnstileSiteKey = null;
+      window.preservedAddresses = [];
+      window.onloadTurnstileCallback = function() {
+        console.log("turnstile | widget ready to render")
+        window.turnstileReady = true;
+      };
+      async function fetchServerSideInfo() {
+        console.log('turnstile | fetching site key')
+        const response = await fetch('/api/v1/get_turnstile_site_key');
+        const data = await response.json();
+        window.turnstileSiteKey = data.site_key;
+        console.log('turnstile | site key fetched')
+        console.log('nightcord | fetching preserved addresses')
+        const response2 = await fetch('/api/v1/get_preserved_addresses');
+        const data2 = await response2.json();
+        window.preservedAddresses = data2.preserved_addresses;
+        console.log('nightcord | preserved addresses fetched')
+      }
+      function getTurnstileToken() {
+        let promise = new Promise((resolve, reject) => {
+          if (!window.turnstileReady) {
+            reject(new Error('Turnstile widget not ready'));
+            return;
+          }
+          if (!window.turnstileSiteKey) {
+            reject(new Error('Turnstile site key not fetched yet'));
+            return;
+          }
+          console.log("turnstile | rendering widget")
+          let dialog = document.createElement('mdui-dialog');
+          dialog.style.overflowY = 'hidden';
+          let center = document.createElement('center');
+          let text = document.createElement('p');
+          let widgetDiv = document.createElement('div');
+          widgetDiv.style.width = '300px';
+          widgetDiv.style.height = '75px';
+          text.textContent = 'A moment before verifying your environment...';
+          center.appendChild(text);
+          center.appendChild(document.createElement('br'));
+          center.appendChild(widgetDiv);
+          dialog.appendChild(center);
+          document.body.appendChild(dialog);
+          console.debug(`turnstile | widget siteKey: ${window.turnstileSiteKey}`)
+          turnstile.render(widgetDiv, {
+            sitekey: window.turnstileSiteKey,
+            theme: 'dark',
+            callback: token => {
+              console.log(`turnstile | challenge solved`)
+              console.debug("turnstile | token:", token)
+              text.textContent = 'Thank you for your patience! <3';
+              setTimeout(() => {
+                dialog.open = false;
+                resolve(token);
+              }, 1500);
+            },
+            'error-callback': function(errorCode) {
+              console.log("turnstile | failed to solve challenge, errorcode =", errorCode)
+               text.textContent = 'An error occurred, refresh the page and try again please.';
+               setTimeout(() => {
+                 dialog.open = false;
+                 reject(errorCode);
+               }, 1500);
+            },
+            'expired-callback': function() {
+              console.log("turnstile | challenge expired")
+              text.textContent = 'Challenge expired, refresh the page and try again please.';
+              setTimeout(() => {
+                dialog.open = false;
+                reject(new Error('Challenge expired'));
+              }, 1500);
+            },
+            'timeout-callback': function() {
+              console.log("turnstile | challenge timed out")
+              text.textContent = 'Challenge timed out, refresh the page and try again please.';
+              setTimeout(() => {
+                dialog.open = false;
+                reject(new Error('Challenge timed out'));
+              }, 1500);
+            }
+          })
+          setTimeout(() => dialog.open = true, 0);  // if i don't do this the animation kinda just kills itself
+        });
+        return promise;
+      }
+      console.log(`  _   _ _       _     _                    _   _____                 _ _ 
+ | \\ | (_) __ _| |__ | |_ ___ ___  _ __ __| | | ____|_ __ ___   __ _(_) |
+ |  \\| | |/ _\` | '_ \\| __/ __/ _ \\| '__/ _\` | |  _| | '_ \` _ \\ / _\` | | |
+ | |\\  | | (_| | | | | || (_| (_) | | | (_| | | |___| | | | | | (_| | | |
+ |_| \\_|_|\\__, |_| |_|\\__\\___\\___/|_|  \\__,_| |_____|_| |_| |_|\\__,_|_|_|
+          |___/                                                          
+\n\nMade with ❤️ by Nightcord\n\n`)
+      fetchServerSideInfo();
+    </script>
+  </body>
+</html>
