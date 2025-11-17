@@ -1,11 +1,16 @@
 <!doctype html>
 <html lang="en" class="mdui-theme-dark">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
-    <meta name="renderer" content="webkit"/>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
+      <meta name="renderer" content="webkit"/>
+      <meta name="description" content="Nightcord Email - Fan-made email forwarding service with @nightcord.email addresses. Inspired by the virtual band Nightcord at 25:00 from Project SEKAI.">
+      <meta name="keywords" content="nightcord, email, forwarding, project sekai, virtual band, 25-ji, niigo">
+      <meta property="og:title" content="Nightcord Email">
+      <meta property="og:description" content="At 25 o'clock in the depths of night, gathered in the corners of the internet - Get your @nightcord.email address">
+      <meta property="og:type" content="website">
 
-    <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+      <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
     <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
     <script
       src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback"
@@ -38,21 +43,41 @@
   <body>
     <br><br><br>
     <center>
-        <p style="font-size: xx-large; animation: fadeInUp 0.5s ease-out forwards; opacity: 0;">Nightcord Email</p>
-        <p style="max-width: 75%; animation: fadeInUp 0.5s ease-out forwards 0.5s; opacity: 0; color: rgb(var(--mdui-color-outline));">At 25 o'clock in the depths of night, gathered in the corners of the internet</p>
+        <p style="font-size: xx-large; animation: fadeInUp 0.4s ease-out forwards; opacity: 0;">Nightcord Email</p>
+        <p style="max-width: 75%; animation: fadeInUp 0.4s ease-out forwards 0.4s; opacity: 0; color: rgb(var(--mdui-color-outline));">At 25 o'clock in the depths of night, gathered in the corners of the internet</p>
         <br><br><br><br><br>
-        <mdui-button style="width: 30%; animation: fadeInUp 0.5s ease-out forwards 1s; opacity: 0;">Join waitlist</mdui-button>
+        <mdui-button style="width: 30%; animation: fadeInUp 0.4s ease-out forwards 0.8s; opacity: 0;" onclick="mdui.$('#apply-form')[0].open=true;">Sign Up</mdui-button>
     </center>
-    <mdui-dialog id="apply-form">
-        
+    <mdui-dialog id="apply-form" close-on-overlay-click>
+        <mdui-text-field label="Email" id="apply-email" helper="Your REAL email address. Will recieve forwarded mails from your @nightcord.email address" required></mdui-text-field>
+        <br>
+        <mdui-text-field label="Username" id="apply-username" helper="Your address will be <username>@nightcord.email" required></mdui-text-field>
+        <br>
+        <mdui-checkbox id="apply-checkbox" onchange="mdui.$('#apply-btn')[0].disabled = !mdui.$('#apply-checkbox')[0].checked">I know that this is a fan-made service, it's not affiliated with SEGA / Colorful Palette / Crypton Future Media, and the service might be terminated at any time.</mdui-checkbox>
+        <br><br>
+        <center><mdui-button id="apply-btn" disabled onclick="apply();">Apply</mdui-button></center>
     </mdui-dialog>
-    <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; animation: fadeIn 0.5s linear forwards 1.5s; opacity: 0;">
+    <mdui-dialog id="applying">Applying...</mdui-dialog>
+    <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; animation: fadeIn 0.4s linear forwards 0.8s; opacity: 0;">
         <mdui-divider></mdui-divider>
         <br>
         <p style="color: rgb(var(--mdui-color-outline)); max-width: 75%; padding-left: 12.5%;">Fan-made service. Not affiliated with SEGA / Colorful Palette / Crypton Future Media.</p>
         <br>
     </footer>
     <script>
+      const $ = mdui.$;
+      const ERROR_TABLE = {
+        10000: 'We\'ve reached 100 signups! Please wait until the next signup period.',
+        10001: 'Invalid email address',
+        10002: 'Email already exists. Please contact the staff to remove it. Please also note that you can only register one address per email.',
+        10003: 'Invalid username',
+        10004: 'Username already exists. Please use another one.',
+        10005: "The username you're using is preserved.",
+        10006: 'Failed to verify Turnstile Token. Refresh the page and try again.',
+        10007: 'Cloudflare refused to send confirmation email. Try again later.',
+        10008: "You can't use a @nightcord.email address to register another one.",
+        30000: 'Internal server error.'
+      }
       mdui.setColorScheme('#884499');
       window.turnstileReady = false;
       window.turnstileSiteKey = null;
@@ -138,6 +163,89 @@
           setTimeout(() => dialog.open = true, 0);  // if i don't do this the animation kinda just kills itself
         });
         return promise;
+      }
+      
+      async function apply() {
+        if(window.preservedAddresses.length == 0){
+          mdui.alert({
+            headline: 'Error',
+            description: 'Please wait for a few seconds and apply again.'
+          });
+          return;
+        }
+        if(!$("#apply-checkbox")[0].checked) {
+          mdui.alert({
+            headline: 'This shouldn\'t happen',
+            description: 'What did you do bro💔💔'
+          });
+          return;
+        }
+        if(!$("#apply-email")[0].value) {
+          mdui.alert({
+            headline: 'Field missing',
+            description: 'Please enter your email address.'
+          });
+          return;
+        }
+        if(!$("#apply-username")[0].value) {
+          mdui.alert({
+            headline: 'Field missing',
+            description: 'Please enter your username.'
+          });
+          return;
+        }
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#apply-email")[0].value)) {
+          mdui.alert({
+            headline: 'Invalid email',
+            description: 'Please enter a valid email address.'
+          });
+          return;
+        }
+        if(!/^[a-zA-Z0-9._-]+/.test($("#apply-username")[0].value)) {
+          mdui.alert({
+            headline: 'Invalid username',
+            description: 'Username can only contain letters, numbers, point, dash and underscore.'
+          });
+          return;
+        }
+        if(window.preservedAddresses.includes($("#apply-username")[0].value)) {
+          mdui.alert({
+            headline: 'Preserved Address',
+            description: 'The username you\'re using is a preserved address. However, that doesn\'t mean you can\'t use it in the future. Stay tuned for preserved addresses allocation!(does\'t apply for addresses like postmaster, admin, etc.)'
+          });
+          return;
+        }
+        $("#apply-form")[0].open = false;
+        let turnstile_token = await getTurnstileToken();
+        $("#applying")[0].open = true;
+        let response = await fetch("/api/v1/register", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: $("#apply-email")[0].value,
+            username: $("#apply-username")[0].value,
+            turnstile_token: turnstile_token
+          })
+        })
+        $("#applying")[0].open = false;
+        let data = await response.json();
+        if(data.error == 0){
+          mdui.alert({
+            headline: 'Registration Successful',
+            description: 'We\'ve sent you a confirmation email via Cloudflare. Please click the link in the email to verify your email address.',
+            confirmText: 'I\'ve clicked the link',
+            onConfirm: () => {
+              document.location.href=`/finish-apply?session=${data.session}`;
+            }
+          })
+        }else{
+          mdui.alert({
+            headline: 'Registration Failed',
+            description: `${ERROR_TABLE[data.error]}(${data.error})`
+          })
+        }
       }
       console.log(`  _   _ _       _     _                    _   _____                 _ _ 
  | \\ | (_) __ _| |__ | |_ ___ ___  _ __ __| | | ____|_ __ ___   __ _(_) |

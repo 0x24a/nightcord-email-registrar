@@ -3,12 +3,13 @@ import json
 
 
 class Config(BaseModel):
+    cloudflare_account_id: str
     cloudflare_zone_id: str
-    cloudflare_auth_email: str
     cloudflare_auth_key: str
     turnstile_site_key: str
     turnstile_secret_key: str
     preserved_addresses: list[str]
+    max_addresses: int
 
 
 def load_config():

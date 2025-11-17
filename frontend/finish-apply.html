@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" class="mdui-theme-dark">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
+      <meta name="renderer" content="webkit"/>
+      <meta name="description" content="Nightcord Email - Fan-made email forwarding service with @nightcord.email addresses. Inspired by the virtual band Nightcord at 25:00 from Project SEKAI.">
+      <meta name="keywords" content="nightcord, email, forwarding, project sekai, virtual band, 25-ji, niigo">
+      <meta property="og:title" content="Nightcord Email">
+      <meta property="og:description" content="At 25 o'clock in the depths of night, gathered in the corners of the internet - Get your @nightcord.email address">
+      <meta property="og:type" content="website">
+
+      <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+    <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+    <title>Finish Apply - Nightcord Email</title>
+    </head>
+    <body>
+    <br><br><br>
+    <center>
+        <p style="font-size: xx-large;">Finish Apply</p>
+        <br><br><br>
+        <p id="fetching-status">Fetching application details</p>
+        <mdui-linear-progress style="max-width: 75%;" id="progress"></mdui-linear-progress>
+    </center>
+    <script>
+    mdui.setColorScheme('#884499');
+    const ERROR_TABLE = {
+      20001: 'Session not found. Please re-apply.',
+      20002: 'Retries exhausted. Please re-apply.',
+      20003: 'Failed to fetch verification status. Please refresh the page.',
+      20004: 'Mail address not found. Please re-apply. If that does not work, please contact staff.',
+      20005: 'Mail not verified. Please go to your email inbox, click the verification link, and then refresh the page.',
+      20006: 'Cloudflare refused to create forward rule. Please refresh the page. If that does not work, please contact staff.'
+    }
+    async function finishApply() {
+      const response = await fetch(`/api/v1/finish_apply?session_id=${new URLSearchParams(window.location.search).get('session')}`);
+      const data = await response.json();
+      if (data.error === 0) {
+        mdui.$('#progress')[0].value = 1;
+        document.getElementById('fetching-status').textContent = 'Application finished successfully! Enjoy your @nightcord.email!';
+      } else {
+        mdui.$('#progress')[0].value = 0;
+        document.getElementById('fetching-status').textContent = ERROR_TABLE[data.error];
+      }
+    }
+    finishApply();
+    </script>
+    </body>
+</html>
